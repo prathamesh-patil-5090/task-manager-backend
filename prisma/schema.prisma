@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  DONE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model User {
+  id         String     @id @default(auto()) @map("_id") @db.ObjectId
+  username   String     @unique
+  email      String     @unique
+  password   String
+  created_at DateTime   @default(now())
+  category   Category[] @relation("UserCategories")
+  categoryId String?    @db.ObjectId
+  tasks      Task[]     @relation("UserTasks")
+}
+
+model Tag {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  name       String   @unique
+  created_at DateTime @default(now())
+  taskId     String?  @db.ObjectId
+  task       Task?    @relation("TaskTags", fields: [taskId], references: [id])
+}
+
+model Category {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  user       User     @relation("UserCategories", fields: [userId], references: [id])
+  name       String
+  created_at DateTime @default(now())
+  userId     String   @db.ObjectId
+  taskId     String?  @db.ObjectId
+  tasks      Task[]   @relation("TaskCategories")
+}
+
+model Task {
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  user        User         @relation("UserTasks", fields: [userId], references: [id])
+  userId      String       @db.ObjectId
+  title       String
+  description String?
+  status      TaskStatus   @default(PENDING)
+  priority    TaskPriority @default(LOW)
+  due_date    DateTime?
+  created_at  DateTime     @default(now())
+  updated_at  DateTime     @updatedAt
+  category    Category?    @relation("TaskCategories", fields: [categoryId], references: [id])
+  tags        Tag[]        @relation("TaskTags")
+  categoryId  String?      @db.ObjectId
+}
