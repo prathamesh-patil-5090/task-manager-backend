@@ -19,8 +19,11 @@ const envSchema = z.object({
   PORT: z.coerce.number().positive().default(3000),
   DATABASE_URL: z.url("Invalid DATABASE_URL format"),
   JWT_SECRET: z.string().min(32, "JWT_SECRET must be of 32 characters"),
+  JWT_REFRESH_SECRET: z
+    .string()
+    .min(32, "JWT_REFRESH_SECRET must be of 32 characters"),
   JWT_EXPIRES_IN: z.string().default("10m"),
-  BCRYPT_ROUNDS: z.number().positive().min(10).max(20).default(12),
+  BCRYPT_ROUNDS: z.coerce.number().positive().min(10).max(20).default(12),
 })
 
 export type Env = z.infer<typeof envSchema>

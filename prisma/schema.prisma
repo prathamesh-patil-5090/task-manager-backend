@@ -21,6 +21,7 @@ enum TaskPriority {
 
 model User {
   id         String     @id @default(auto()) @map("_id") @db.ObjectId
+  name       String
   username   String     @unique
   email      String     @unique
   password   String
@@ -62,4 +63,10 @@ model Task {
   category    Category?    @relation("TaskCategories", fields: [categoryId], references: [id])
   tags        Tag[]        @relation("TaskTags")
   categoryId  String?      @db.ObjectId
+}
+
+model BlacklistedRefreshTokens {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  refreshToken String   @unique
+  listedAt     DateTime @default(now())
 }
