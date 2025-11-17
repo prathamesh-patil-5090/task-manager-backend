@@ -6,9 +6,6 @@ import request from "supertest"
 import type { PrismaClient } from "@prisma/client"
 import { mockDeep, mockReset } from "jest-mock-extended"
 
-// ----------------------
-// 🔧 OFFICIAL PRISMA MOCK
-// ----------------------
 export const prismaMock = mockDeep<PrismaClient>()
 
 jest.mock("../../db", () => ({
@@ -16,26 +13,23 @@ jest.mock("../../db", () => ({
   default: prismaMock,
 }))
 
-// ----------------------
-// 🔧 MOCK PASSWORD UTILS
-// ----------------------
 jest.mock("../utils/password", () => ({
   hashPassword: jest.fn(),
   comparePassword: jest.fn(),
   validatePassword: jest.fn(),
 }))
 
-// ----------------------
-// 🔧 MOCK JWT UTILS
-// ----------------------
 jest.mock("../utils/jwt", () => ({
   generateAccessToken: jest.fn(),
   generateRefreshToken: jest.fn(),
   verifyRefreshToken: jest.fn(),
 }))
 
-// Import after mocks
-import authRoutes from "../routes/auth.routes"
+import {
+  LogOut,
+  SignInController,
+  SignUpController,
+} from "../controllers/auth.controller"
 import * as jwtUtils from "../utils/jwt"
 import * as passwordUtils from "../utils/password"
 
@@ -43,7 +37,14 @@ const createTestApp = () => {
   const app = express()
   app.use(express.json())
   app.use(cookieParser())
-  app.use("/api/auth", authRoutes)
+
+  // Create mock routes directly instead of importing authRoutes
+  const router = express.Router()
+  router.post("/signin", SignInController)
+  router.post("/signup", SignUpController)
+  router.post("/logout", LogOut)
+
+  app.use("/api/auth", router)
   return app
 }
 
@@ -56,9 +57,7 @@ describe("🔐 Auth API Tests", () => {
     app = createTestApp()
   })
 
-  // ------------------------------------------
-  // 🚀 SIGNUP TESTS
-  // ------------------------------------------
+  // Rest of your tests remain the same...
   describe("POST /api/auth/signup", () => {
     test("✅ Should successfully create a new user", async () => {
       const newUserData = {
@@ -78,11 +77,8 @@ describe("🔐 Auth API Tests", () => {
         categoryId: null,
       }
 
-      // DB mocks
       prismaMock.user.findFirst.mockResolvedValue(null)
       prismaMock.user.create.mockResolvedValue(mockUser)
-
-      // Password util mocks
       ;(passwordUtils.validatePassword as jest.Mock).mockReturnValue({
         isValid: true,
         errors: [],
@@ -99,6 +95,7 @@ describe("🔐 Auth API Tests", () => {
       jest
         .spyOn(jwtUtils, "generateRefreshToken")
         .mockResolvedValue("fake_refresh_token")
+
       const response = await request(app)
         .post("/api/auth/signup")
         .send(newUserData)
