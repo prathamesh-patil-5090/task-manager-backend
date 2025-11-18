@@ -9,7 +9,7 @@ import {
   SignInController,
   SignUpController,
 } from "../controllers/auth.controller"
-const router = express.Router()
+const authRouter = express.Router()
 
 const authLimiter =
   env.APP_STAGE === "test"
@@ -20,9 +20,9 @@ const authLimiter =
         message: "Too many attempts, try again later",
       })
 
-router.post("/signin", authLimiter, SignInController)
-router.post("/signup", authLimiter, SignUpController)
-router.post("/refresh", authLimiter, RefreshTokenController)
-router.post("/logout", LogOut)
+authRouter.post("/signin", authLimiter, SignInController)
+authRouter.post("/signup", authLimiter, SignUpController)
+authRouter.post("/refresh", authLimiter, RefreshTokenController)
+authRouter.post("/logout", LogOut)
 
-export default router
+export default authRouter

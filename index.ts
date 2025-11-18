@@ -5,6 +5,7 @@ import cron from "node-cron"
 import prisma from "./db"
 import env from "./env"
 import authRoutes from "./src/routes/auth.routes"
+import taskRouter from "./src/routes/task.routes"
 import cleanupBlacklistedTokens from "./src/utils/cleanupBlacklistedTokens"
 const app = express()
 const port = env.PORT
@@ -19,7 +20,7 @@ app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
 app.use(morgan("dev"))
 app.use("/api/auth", authRoutes)
-
+app.use("/api/task", taskRouter)
 cron.schedule("0 2 * * *", async () => {
   console.log("Running scheduled cleanup of blacklisted tokens ...")
   await cleanupBlacklistedTokens()

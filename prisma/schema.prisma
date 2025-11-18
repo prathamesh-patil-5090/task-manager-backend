@@ -20,39 +20,31 @@ enum TaskPriority {
 }
 
 model User {
-  id         String     @id @default(auto()) @map("_id") @db.ObjectId
-  name       String
-  username   String     @unique
-  email      String     @unique
-  password   String
-  created_at DateTime   @default(now())
-  category   Category[] @relation("UserCategories")
-  categoryId String?    @db.ObjectId
-  tasks      Task[]     @relation("UserTasks")
-}
-
-model Tag {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  name       String   @unique
+  name       String
+  username   String   @unique
+  email      String   @unique
+  password   String
   created_at DateTime @default(now())
-  taskId     String?  @db.ObjectId
-  task       Task?    @relation("TaskTags", fields: [taskId], references: [id])
+
+  categories Category[] @relation("UserCategories")
+  tasks      Task[]     @relation("UserTasks")
 }
 
 model Category {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  user       User     @relation("UserCategories", fields: [userId], references: [id])
   name       String
   created_at DateTime @default(now())
-  userId     String   @db.ObjectId
-  taskId     String?  @db.ObjectId
-  tasks      Task[]   @relation("TaskCategories")
+
+  userId String @db.ObjectId
+  user   User   @relation("UserCategories", fields: [userId], references: [id])
+
+  tasks Task[]
 }
+
 
 model Task {
   id          String       @id @default(auto()) @map("_id") @db.ObjectId
-  user        User         @relation("UserTasks", fields: [userId], references: [id])
-  userId      String       @db.ObjectId
   title       String
   description String?
   status      TaskStatus   @default(PENDING)
@@ -60,9 +52,14 @@ model Task {
   due_date    DateTime?
   created_at  DateTime     @default(now())
   updated_at  DateTime     @updatedAt
-  category    Category?    @relation("TaskCategories", fields: [categoryId], references: [id])
-  tags        Tag[]        @relation("TaskTags")
-  categoryId  String?      @db.ObjectId
+
+  userId String @db.ObjectId
+  user   User   @relation("UserTasks", fields: [userId], references: [id])
+
+  categoryId String?   @db.ObjectId
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  tags String[]
 }
 
 model BlacklistedRefreshTokens {
