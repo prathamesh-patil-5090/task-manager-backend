@@ -1,4 +1,4 @@
-import { jest } from "@jest/globals"
+import { beforeEach, jest } from "@jest/globals"
 import cookieParser from "cookie-parser"
 import express from "express"
 import request from "supertest"
@@ -23,7 +23,7 @@ jest.mock("../middlewares/authenticateToken", () => {
         email: "test@example.com",
         name: "Test User",
       }
-      return next() 
+      return next()
     },
   }
 })
@@ -176,6 +176,14 @@ describe("Task API Routes", () => {
   describe("DELETE /api/task/:taskId", () => {
     const taskId = "task-to-delete"
 
+    beforeEach(() => {
+      ;(prismaMock.$transaction as jest.Mock).mockImplementation(
+        async (callback: any) => {
+          return await callback(prismaMock)
+        },
+      )
+    })
+
     test("should delete a task successfully if it belongs to the user", async () => {
       prismaMock.task.findFirst.mockResolvedValueOnce({
         id: taskId,
@@ -186,6 +194,10 @@ describe("Task API Routes", () => {
       const res = await request(app).delete(`/api/task/${taskId}`)
 
       expect(res.status).toBe(204) // 204 No Content is standard for successful deletion
+      expect(prismaMock.$transaction).toHaveBeenCalled()
+      expect(prismaMock.task.findFirst).toHaveBeenCalledWith({
+        where: { id: taskId, userId: "test-user-id" },
+      })
       expect(prismaMock.task.delete).toHaveBeenCalledWith({
         where: { id: taskId },
       })
@@ -198,6 +210,8 @@ describe("Task API Routes", () => {
 
       expect(res.status).toBe(404)
       expect(res.body.error).toMatch(/not found/i)
+      expect(prismaMock.$transaction).toHaveBeenCalled()
+      expect(prismaMock.task.findFirst).toHaveBeenCalled()
       expect(prismaMock.task.delete).not.toHaveBeenCalled()
     })
   })

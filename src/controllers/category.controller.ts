@@ -186,7 +186,7 @@ export const updateCategory = async (
     }
     return res.status(200).json({
       message: "Category updated succesfully",
-      category: updateCategory,
+      category: updatedCategory,
     })
   } catch (err) {
     if (err instanceof Error) {
@@ -238,7 +238,7 @@ export const deleteCategory = async (
     })
     return res.status(204).send()
   } catch (err) {
-    if (err instanceof Error && err.message === 'CategoryNotFound') {
+    if (err instanceof Error && err.message === "CategoryNotFound") {
       console.error("Error occurred while fetching tasks: ", err.message)
       return res.status(404).json({
         error: "Category does not exist or does not belong to the user",
