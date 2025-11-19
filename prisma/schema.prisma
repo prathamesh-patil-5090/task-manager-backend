@@ -42,7 +42,6 @@ model Category {
   tasks Task[]
 }
 
-
 model Task {
   id          String       @id @default(auto()) @map("_id") @db.ObjectId
   title       String

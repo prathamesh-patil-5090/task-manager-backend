@@ -54,7 +54,7 @@ export const getAllUserTasks = async (
     if (err instanceof Error) {
       console.error("Error occurred while fetching tasks: ", err.message)
       return res.status(500).json({
-        error: err.message,
+        error: "Failed to fetch tasks",
       })
     }
     console.error("Internal Server Error")
@@ -97,7 +97,7 @@ export const getTaskById = async (
     if (err instanceof Error) {
       console.error("Error occurred while fetching tasks: ", err.message)
       return res.status(500).json({
-        error: err.message,
+        error: "Failed to fetch task",
       })
     }
     console.error("Internal Server Error")
@@ -164,7 +164,7 @@ export const createTask = async (
     if (err instanceof Error) {
       console.error("Error occurred while creating task: ", err.message)
       return res.status(500).json({
-        error: err.message,
+        error: "Failed to create task",
       })
     }
     console.error("Internal Server Error")
@@ -251,7 +251,7 @@ export const updateTask = async (
     if (err instanceof Error) {
       console.error("Error occurred while creating task: ", err.message)
       return res.status(500).json({
-        error: err.message,
+        error: "Failed to update task",
       })
     }
     console.error("Internal Server Error")
@@ -277,27 +277,28 @@ export const deleteTaskById = async (
       return res.status(400).json({
         error: "taskId is required",
       })
-    if (
-      !(await prisma.task.findFirst({
-        where: {
-          id: taskId,
-          userId: user.id,
-        },
-      }))
-    ) {
-      return res.status(404).json({
-        error: "Task not found or doesn't belongs to the user",
+    await prisma.$transaction(async (tx) => {
+      if (
+        !(await tx.task.findFirst({
+          where: {
+            id: taskId,
+            userId: user.id,
+          },
+        }))
+      ) {
+        throw new Error("taskNotFound")
+      }
+      await tx.task.delete({
+        where: { id: taskId },
       })
-    }
-    await prisma.task.delete({
-      where: { id: taskId },
     })
+
     return res.status(204).send()
   } catch (err) {
-    if (err instanceof Error) {
+    if (err instanceof Error && err.message === "taskNotFound") {
       console.error("Error occurred while creating task: ", err.message)
-      return res.status(500).json({
-        error: err.message,
+      return res.status(404).json({
+        error: "Task not found or doesn't belongs to the user",
       })
     }
     console.error("Internal Server Error")
